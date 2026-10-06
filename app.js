@@ -51,7 +51,6 @@ function finishOpening() {
   if (!root.classList.contains('has-opening') || opening.classList.contains('out')) return;
   window.clearTimeout(openingTimer);
   opening.classList.add('out');
-  try { sessionStorage.setItem('ongyeol-opening-v2', '1'); } catch (error) { /* Storage may be unavailable. */ }
   window.setTimeout(() => {
     root.classList.remove('has-opening');
     document.body.classList.remove('opening-lock');
@@ -60,9 +59,10 @@ function finishOpening() {
   }, reduceMotion ? 0 : 950);
 }
 
-if (root.classList.contains('has-opening') && !reduceMotion) {
+if (root.classList.contains('has-opening')) {
   document.body.classList.add('opening-lock');
-  openingTimer = window.setTimeout(finishOpening, 3000);
+  if (reduceMotion) openingVideo.pause();
+  openingTimer = window.setTimeout(finishOpening, reduceMotion ? 1800 : 3000);
   document.querySelector('#opening-skip').addEventListener('click', finishOpening);
 } else {
   root.classList.remove('has-opening');
@@ -189,6 +189,7 @@ const methodOrbit = document.querySelector('.method-orbit');
 const methodSteps = [...document.querySelectorAll('.method-step')];
 const mobileQuick = document.querySelector('.mobile-quick');
 const productSection = document.querySelector('.products');
+const forYou = document.querySelector('.for-you');
 const closing = document.querySelector('.closing');
 const pageProgress = document.querySelector('.page-progress span');
 const clamp = (number, min, max) => Math.min(max, Math.max(min, number));
@@ -201,9 +202,11 @@ function paintScroll() {
   const closingTop = closing.getBoundingClientRect().top;
   const productRect = productSection.getBoundingClientRect();
   const methodRect = method.getBoundingClientRect();
+  const forYouRect = forYou.getBoundingClientRect();
   const productVisible = productRect.top < window.innerHeight * .7 && productRect.bottom > window.innerHeight * .2;
   const methodVisible = methodRect.top < window.innerHeight * .7 && methodRect.bottom > window.innerHeight * .2;
-  mobileQuick.classList.toggle('show', window.scrollY > hero.offsetHeight * .7 && closingTop > window.innerHeight * .7 && !productVisible && !methodVisible);
+  const forYouVisible = forYouRect.top < window.innerHeight * .7 && forYouRect.bottom > window.innerHeight * .2;
+  mobileQuick.classList.toggle('show', window.scrollY > hero.offsetHeight * .7 && closingTop > window.innerHeight * .7 && !productVisible && !methodVisible && !forYouVisible);
 
   if (!reduceMotion) {
     const heroProgress = clamp(window.scrollY / Math.max(hero.offsetHeight, 1), 0, 1);
