@@ -48,7 +48,7 @@ const closingVideo = document.querySelector('.closing-video');
 let openingTimer;
 
 function finishOpening() {
-  if (!root.classList.contains('has-opening')) return;
+  if (!root.classList.contains('has-opening') || opening.classList.contains('out')) return;
   window.clearTimeout(openingTimer);
   opening.classList.add('out');
   try { sessionStorage.setItem('ongyeol-opening-v2', '1'); } catch (error) { /* Storage may be unavailable. */ }
@@ -57,7 +57,7 @@ function finishOpening() {
     document.body.classList.remove('opening-lock');
     opening.hidden = true;
     openingVideo.pause();
-  }, reduceMotion ? 0 : 860);
+  }, reduceMotion ? 0 : 950);
 }
 
 if (root.classList.contains('has-opening') && !reduceMotion) {
@@ -217,10 +217,21 @@ function paintScroll() {
     }
   }
 
-  const methodProgress = clamp((window.innerHeight * .72 - methodRect.top) / Math.max(methodRect.height, 1), 0, 1);
+  const firstStepTop = methodSteps[0].getBoundingClientRect().top;
+  const lastStepTop = methodSteps[methodSteps.length - 1].getBoundingClientRect().top;
+  const methodTrigger = window.innerHeight * .78;
+  const methodStarted = firstStepTop <= methodTrigger;
+  const methodProgress = methodStarted
+    ? clamp((methodTrigger - firstStepTop) / Math.max(lastStepTop - firstStepTop, 1), 0, 1)
+    : 0;
   methodOrbit.style.setProperty('--method-rotate', Math.round(methodProgress * 300) + 'deg');
-  const activeStep = clamp(Math.floor(methodProgress * methodSteps.length), 0, methodSteps.length - 1);
-  methodSteps.forEach((step, index) => step.classList.toggle('active', methodProgress > .05 && index === activeStep));
+  let activeStep = -1;
+  if (methodStarted) {
+    methodSteps.forEach((step, index) => {
+      if (step.getBoundingClientRect().top <= methodTrigger) activeStep = index;
+    });
+  }
+  methodSteps.forEach((step, index) => step.classList.toggle('active', index === activeStep));
 }
 function schedulePaint() {
   if (!ticking) {
